@@ -8,5 +8,4 @@ deploy:
   file: build/libs/*.jar
   file_glob: true
   on:
-    repo: palantir/gradle-jacoco-coverage
-    branch: master
+    tags: true
