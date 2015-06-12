@@ -16,7 +16,7 @@
 
 package com.palantir.jacoco;
 
-class CoverageCounter {
+final class CoverageCounter {
     private final int covered;
     private final int missed;
 

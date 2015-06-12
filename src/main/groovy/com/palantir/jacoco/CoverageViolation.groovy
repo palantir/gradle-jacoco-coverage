@@ -20,14 +20,14 @@ package com.palantir.jacoco
  * A coverage violation observed for the given {@code clazz}.
  */
 public class CoverageViolation {
-    String cls
-    double threshold
-    CoverageType type
+    String clazz
     int covered
+    double threshold
     int total
+    CoverageType type
 
-    public CoverageViolation(String clazz, double threshold, CoverageType type, int covered, int total) {
-        this.cls = clazz
+    public CoverageViolation(String clazz, int covered, double threshold, int total, CoverageType type) {
+        this.clazz = clazz
         this.threshold = threshold
         this.type = type
         this.covered = covered
@@ -36,6 +36,6 @@ public class CoverageViolation {
 
     @Override
     public String toString() {
-        return String.format("%s (%d/%d %s coverage < %g)", cls, covered, total, type, threshold)
+        return String.format("%s (%d/%d %s coverage < %g)", clazz, covered, total, type, threshold)
     }
 }

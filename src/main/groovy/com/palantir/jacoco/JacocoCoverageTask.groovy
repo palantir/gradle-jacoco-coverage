@@ -30,7 +30,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 public class JacocoCoverageTask extends DefaultTask {
 
     private static final OrderBy<CoverageViolation> VIOLATION_ORDER =
-            new OrderBy([{ violation -> violation.cls }, { violation -> violation.type }])
+            new OrderBy([{ violation -> violation.clazz }, { violation -> violation.type }])
 
     /** The Jacoco coverage results for each file and coverage type; populated by {@link JacocoCoveragePlugin#apply}. */
     Map<String, Map<CoverageType, CoverageCounter>> coverage = Maps.newHashMap()
@@ -70,7 +70,7 @@ public class JacocoCoverageTask extends DefaultTask {
                     def total = coverageCounter.missed + coverageCounter.covered
                     if (coverageCounter.covered < minThreshold * total) {
                         violations.add(new CoverageViolation(
-                                clazz, minThreshold, coverageType, coverageCounter.covered, total))
+                                clazz, coverageCounter.covered, minThreshold, total, coverageType))
                     }
                 }
             }
