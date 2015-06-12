@@ -1,11 +1,17 @@
 language: java
 jdk:
 - oraclejdk7
+cache:
+  directories:
+  - ".gradle"
+script:
+- ./gradlew build publish --stacktrace
 deploy:
   provider: releases
+  skip_cleanup: true
   api_key:
     secure: L2jM/D4VYnKSf5TLgwjbGXw45VhKb8Mw53ToHPIuoYAMMnDJZ+VXKOHdJnLqRF9ZcFHSevqLYEDjvMNLE1kA3Iqlq05Xbi+eExwcJFMUuh8eQH3+JWUrWon6axQ5YzJuQrgaqleCrP9dkofqF+Vh16J+yNUVpbfcib+s7Lo9vzwhMc5jSTtU/VDmYEju6IbSlVoAxVDG9syGhE9pNppsoGlFrSsf3GZXKh8fygaeuJlxPEZxgeCUNKPsI7cO/xbzJZbdSvLmi4j5FxoK842D4XMcAkWC/UUYulhv43IVnTKj8jN1NTnJ+6Ths8tAia4mlckqALTG8Mka4ArOCgCb8LwXsrSy6E9hIEbLIEETtu7b6Bhc+6NyPeeoHSIVVqHMZd0OsKlg9ckCYP8RgIhVk1Ha3ZRezYbrmAn2rJ6DzKAhEAVmeEVYA9GaTrRj2YRss7sEoxjS2KZ3tRHYSeJhusM/m9edpHmGdJooRygTRd4/F1i5peczbD2VTNaYxa/n/a6GyMkUvlohwRj+ARzTDd7BD5tMcUxwGef6rMXZKj8n+owKOfIODM2QeVGscKe+No0PuznjUDLrLmVBsG+8QIU/uxtHfis9lzYUVFkByrKPichQHjGlTNv2cvUliWfviCzP2EWUAH83xT1mKENXwDKdU6vk3bYd7/TLj7YlP+M=
-  file: build/libs/*.jar
+  file: build/artifacts/*
   file_glob: true
   on:
     tags: true

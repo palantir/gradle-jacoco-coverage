@@ -10,6 +10,8 @@ buildscript {
 
 apply plugin: "groovy"
 apply plugin: "idea"
+apply plugin: 'maven-publish'
+apply plugin: 'maven'
 
 repositories {
     jcenter()
@@ -32,4 +34,34 @@ task sourceJar(type: Jar) {
     from sourceSets.main.allSource
     classifier "sources"
 }
-tasks.build.dependsOn sourceJar
+
+publishing {
+  publications {
+    ivy(MavenPublication) {
+      from components.java
+
+      artifact(sourceJar) {
+        classifier "sources"
+      }
+    }
+  }
+  repositories {
+    maven {
+      url "$buildDir/localpublish/"
+    }
+  }
+}
+
+task zipPublish (type: Zip) {
+  from ("${buildDir}/localpublish") {
+    include '**/*'
+    exclude '**/maven-metadata.xml*'
+  }
+  appendix = "release"
+  destinationDir = file("${project.buildDir}/artifacts")
+}
+
+publish << {
+  file("${project.buildDir}/artifacts").mkdirs()
+  tasks.zipPublish.execute()
+}
