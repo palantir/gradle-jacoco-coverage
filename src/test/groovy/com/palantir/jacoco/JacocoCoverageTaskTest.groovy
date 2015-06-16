@@ -93,7 +93,8 @@ class JacocoCoverageTaskTest extends Specification {
     }
 
     def "Rules have no effect on coverage types and classes that they don't apply to"() {
-        // In particular, this check verifies that the "return 2.0" checks in JacocoPluginExtension#threshold are filtered out.
+        // In particular, this check verifies that the "return 2.0" checks in JacocoCoverageExtension#threshold
+        // are filtered out.
         when:
         extension.threshold(0.0, CoverageType.INSTRUCTION, "AnotherClass.java")
         def violations = JacocoCoverageTask.applyRules(extension.coverageRules, getSampleCoverage())
