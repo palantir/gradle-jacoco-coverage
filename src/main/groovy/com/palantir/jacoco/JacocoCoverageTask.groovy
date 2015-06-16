@@ -35,7 +35,6 @@ public class JacocoCoverageTask extends DefaultTask {
     /** The Jacoco coverage results for each file and coverage type; populated by {@link JacocoCoveragePlugin#apply}. */
     Map<String, Map<CoverageType, CoverageCounter>> coverage = Maps.newHashMap()
 
-    // Called by Gradle to when running this task.
     @TaskAction
     def verifyCoverage() {
         JacocoCoverageExtension extension = getProject().getExtensions().getByType(JacocoCoverageExtension.class)
