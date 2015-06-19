@@ -186,4 +186,25 @@ class JacocoCoverageTaskTest extends Specification {
         assert violations == [new CoverageViolation("DummyClass.java", 0, 1.0, 1, CoverageType.CLASS),
                               new CoverageViolation("org/somepackage/AnotherClass", 0, 1.0, 1, CoverageType.CLASS)]
     }
+
+    def "Thresholds can be defined for all scopes at once"() {
+        when:
+        extension.threshold(0.5, "AnotherClass.java")
+        extension.threshold(0.9, ~"org/somepackage/Dummy.*")
+        def rules = extension.coverage
+        def coverage = getSampleCoverage()
+        def violations = JacocoCoverageTask.applyRules(rules, coverage)
+
+        then:
+        assert violations == [new CoverageViolation("org/somepackage/DummyClass", 0, 0.9, 1, CoverageType.CLASS),
+                              new CoverageViolation("org/somepackage/DummyClass", 0, 0.9, 1, CoverageType.COMPLEXITY),
+                              new CoverageViolation("org/somepackage/DummyClass", 0, 0.9, 3, CoverageType.INSTRUCTION),
+                              new CoverageViolation("org/somepackage/DummyClass", 0, 0.9, 1, CoverageType.LINE),
+                              new CoverageViolation("org/somepackage/DummyClass", 0, 0.9, 1, CoverageType.METHOD),
+                              new CoverageViolation("AnotherClass.java", 0, 0.5, 1, CoverageType.CLASS),
+                              new CoverageViolation("AnotherClass.java", 0, 0.5, 2, CoverageType.COMPLEXITY),
+                              new CoverageViolation("AnotherClass.java", 0, 0.5, 4, CoverageType.INSTRUCTION),
+                              new CoverageViolation("AnotherClass.java", 0, 0.5, 2, CoverageType.LINE),
+                              new CoverageViolation("AnotherClass.java", 0, 0.5, 2, CoverageType.METHOD)]
+    }
 }

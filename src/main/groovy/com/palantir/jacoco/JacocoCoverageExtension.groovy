@@ -31,7 +31,7 @@ public class JacocoCoverageExtension {
     public List<Closure<Double>> coverage = new ArrayList<>()
 
     /**
-     * Adds a minimum coverage threshold for all files and coverage types.
+     * Adds a minimum coverage threshold for all scopes and coverage types.
      * @param value The minimum required threshold, a number in [0,1].
      */
     def threshold(double value) {
@@ -41,7 +41,7 @@ public class JacocoCoverageExtension {
     }
 
     /**
-     * Adds a minimum coverage threshold for the given coverage type and for all files.
+     * Adds a minimum coverage threshold for the given coverage type and for all scopes.
      * @param value The minimum required threshold, a number in [0,1].
      * @param coverageType The type of JaCoCo coverage this threshold applies to.
      */
@@ -50,14 +50,31 @@ public class JacocoCoverageExtension {
     }
 
     /**
-     * Adds a minimum coverage threshold for the given coverage type and files with the given filename (in any directory).
+     * Adds a minimum coverage threshold for all coverage types and the given scope name.
      * @param value The minimum required threshold, a number in [0,1].
      * @param coverageType The type of JaCoCo coverage this rule applies to.
-     * @param filename The name of the file(s) that this threshold applies to.
+     * @param scope The scope (e.g., file name, class name, package name, report name) that this threshold applies to.
      */
-    def threshold(double value, CoverageType coverageType, String filename) {
+    def threshold(double value, String scope) {
+        CoverageType.values().each { coverageType ->
+            coverage.add({ CoverageType ct, String str ->
+                if (coverageType == ct && str.equals(scope)) {
+                    return value
+                }
+                return 2.0 // Thresholds >1.0 are never considered, i.e. this rule will be ignored.
+            })
+        }
+    }
+
+    /**
+     * Adds a minimum coverage threshold for the given coverage type and scope (exact match).
+     * @param value The minimum required threshold, a number in [0,1].
+     * @param coverageType The type of JaCoCo coverage this rule applies to.
+     * @param scope The scope that this threshold applies to.
+     */
+    def threshold(double value, CoverageType coverageType, String scope) {
         coverage.add({ CoverageType ct, String str ->
-            if (coverageType == ct && str.equals(filename)) {
+            if (coverageType == ct && str.equals(scope)) {
                 return value
             }
             return 2.0 // Thresholds >1.0 are never considered, i.e. this rule will be ignored.
@@ -65,14 +82,31 @@ public class JacocoCoverageExtension {
     }
 
     /**
-     * Adds a minimum coverage threshold for the given coverage type and files (in any directory) matching a pattern.
+     * Adds a minimum coverage threshold for all coverage types and files scopes matching the given pattern.
      * @param value The minimum required threshold, a number in [0,1].
      * @param coverageType The type of JaCoCo coverage this rule applies to.
-     * @param fileNamePattern A regular expression specifying the name of the file(s) that this threshold applies to.
+     * @param scopePattern A regular expression specifying the names of the scopes that this threshold applies to.
      */
-    def threshold(double value, CoverageType coverageType, Pattern fileNamePattern) {
+    def threshold(double value, Pattern scopePattern) {
+        CoverageType.values().each { coverageType ->
+            coverage.add({ CoverageType ct, String str ->
+                if (coverageType == ct && str ==~ scopePattern) {
+                    return value
+                }
+                return 2.0 // Thresholds >1.0 are never considered, i.e. this rule will be ignored.
+            })
+        }
+    }
+
+    /**
+     * Adds a minimum coverage threshold for the given coverage type scopes matching the given pattern.
+     * @param value The minimum required threshold, a number in [0,1].
+     * @param coverageType The type of JaCoCo coverage this rule applies to.
+     * @param scopePattern A regular expression specifying the names of the scopes that this threshold applies to.
+     */
+    def threshold(double value, CoverageType coverageType, Pattern scopePattern) {
         coverage.add({ CoverageType ct, String str ->
-            if (coverageType == ct && str ==~ fileNamePattern) {
+            if (coverageType == ct && str ==~ scopePattern) {
                 return value
             }
             return 2.0 // Thresholds >1.0 are never considered, i.e. this rule will be ignored.
@@ -80,12 +114,12 @@ public class JacocoCoverageExtension {
     }
 
     /**
-     * Exempts files with given {@code filename} from coverage requirements.
-     * @param filename The name of the file(s) that are whitelisted.
+     * Exempts the given scope from coverage requirements.
+     * @param scope The name of the scope that is to be whitelisted.
      */
-    def whitelist(String filename) {
+    def whitelist(String scope) {
         coverage.add({ CoverageType ct, String str ->
-            if (str.equals(filename)) {
+            if (str.equals(scope)) {
                 return 0.0 // Whitelist.
             }
             return 2.0 // Thresholds >1.0 are never considered, i.e. this rule will be ignored.
@@ -93,12 +127,12 @@ public class JacocoCoverageExtension {
     }
 
     /**
-     * Exempts files (in any directory) whose name matches the given {@code fileNamePattern} from coverage requirements.
-     * @param fileNamePattern A regular expression specifying the name of the file(s) that are to be whitelisted.
+     * Exempts scopes matching the given pattern from coverage requirements.
+     * @param scopePattern A regular expression specifying the scope that is to be whitelisted.
      */
-    def whitelist(Pattern fileNamePattern) {
+    def whitelist(Pattern scopePattern) {
         coverage.add({ CoverageType ct, String str ->
-            if (str ==~ fileNamePattern) {
+            if (str ==~ scopePattern) {
                 return 0.0 // Whitelist.
             }
             return 2.0 // Thresholds >1.0 are never considered, i.e. this rule will be ignored.
