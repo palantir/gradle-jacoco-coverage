@@ -17,6 +17,7 @@
 package com.palantir.jacoco
 
 import com.google.common.collect.Maps
+import groovy.util.slurpersupport.GPathResult
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskAction
@@ -81,20 +82,17 @@ public class JacocoCoverageTask extends DefaultTask {
     /**
      * Returns the Jacoco coverage results as a map <source file> -> (<coverage type> -> (covered cases, missed cases)).
      */
-    static def Map<String, Map<CoverageType, CoverageCounter>> extractCoverageFromReport(InputStream jacocoXmlReport) {
+    static Map<String, Map<CoverageType, CoverageCounter>> extractCoverageFromReport(InputStream jacocoXmlReport) {
+        def document = parseJacocoXmlReport(jacocoXmlReport)
         def Map<String, Map<CoverageType, CoverageCounter>> coverage = new HashMap<>()
-        Document document = parseJacocoXmlReport(jacocoXmlReport)
-        document.getElementsByTagName("sourcefile").each({ sourceFile ->
-            String sourceFileName = sourceFile.getAttributes().getNamedItem("name").getNodeValue()
-            Map<CoverageType, CoverageCounter> submap =
-                    coverage.get(sourceFileName, new EnumMap<>(CoverageType.class))
-            sourceFile.getChildNodes().each({ counter ->
-                if (counter.getNodeName().equals("counter")) {
-                    NamedNodeMap map = counter.getAttributes()
-                    CoverageType type = CoverageType.valueOf(map.getNamedItem("type").getNodeValue())
-                    submap[type] = new CoverageCounter(
-                            map.getNamedItem("covered").getNodeValue().toInteger(),
-                            map.getNamedItem("missed").getNodeValue().toInteger())
+
+        document.'**'.findAll { it.name() == "sourcefile" }.each({ sourceFile ->
+            String sourceFileName = sourceFile.@name
+            Map<CoverageType, CoverageCounter> submap = coverage.get(sourceFileName, new EnumMap<>(CoverageType.class))
+            sourceFile.counter.each({ counter ->
+                if (counter.name().equals("counter")) {
+                    CoverageType type = CoverageType.valueOf(counter.@type.toString())
+                    submap[type] = new CoverageCounter(counter.@covered.toInteger(), counter.@missed.toInteger())
                 }
             })
         })
@@ -103,22 +101,14 @@ public class JacocoCoverageTask extends DefaultTask {
     }
 
     /**
-     * Parses the given Jacoco report into a DOM object and returns it.
+     * Parses the given Jacoco report into a GPathResult object and returns it.
      */
-    static Document parseJacocoXmlReport(InputStream jacocoXmlReport) {
-        Document document
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance()
-            factory.setValidating(false)
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
-            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
-            factory.setFeature("http://xml.org/sax/features/namespaces", false)
-            DocumentBuilder documentBuilder = factory.newDocumentBuilder()
-            document = documentBuilder.parse(jacocoXmlReport)
-        } catch (SAXException | IOException e) {
-            throw new RuntimeException("Failed to parse Jacoco XML report", e)
-        }
+    static GPathResult parseJacocoXmlReport(InputStream jacocoXmlReport) {
+        def parser = new XmlSlurper()
+        parser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
+        parser.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+        parser.setFeature("http://xml.org/sax/features/namespaces", false)
 
-        document
+        parser.parse(jacocoXmlReport)
     }
 }

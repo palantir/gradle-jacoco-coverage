@@ -38,10 +38,6 @@ class JacocoFullReportPluginTest extends IntegrationSpec {
         }
     '''.stripIndent()
 
-    def setup() {
-        fork = true  // Run test in separate JVM in order to isolate classloaders. Sadly, this makes debugging hard.
-    }
-
     def writeTestableClass(File baseDir) {
         createFile('src/main/java/Foo.java', baseDir) << '''
         public class Foo {
@@ -88,12 +84,14 @@ class JacocoFullReportPluginTest extends IntegrationSpec {
     }
 
     def numberMissedInstructions(String coverageXml) {
-        def xPath = XPathFactory.newInstance().newXPath();
-        def missedInstructionsXPath =
-            '/report/package/sourcefile[@name="Foo.java"]/counter[@type="INSTRUCTION"]/@missed'
-        Document fullCoverage = JacocoCoverageTask.parseJacocoXmlReport(file(coverageXml).newInputStream())
-        def missedInstructions = (org.w3c.dom.Node) xPath.evaluate(missedInstructionsXPath, fullCoverage, XPathConstants.NODE)
-        return missedInstructions.nodeValue.toInteger()
+        def fullCoverage = JacocoCoverageTask.parseJacocoXmlReport(file(coverageXml).newInputStream())
+        def missedInstructions = fullCoverage
+                .package
+                .sourcefile.find {it.@name=="Foo.java"}
+                .counter.find {it.@type=="INSTRUCTION"}
+                .@missed.toInteger()
+
+        missedInstructions
     }
 
     def 'jacoco-full-report reports on union of execution data'() {
