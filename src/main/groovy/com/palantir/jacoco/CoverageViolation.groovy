@@ -16,9 +16,12 @@
 
 package com.palantir.jacoco
 
+import groovy.transform.EqualsAndHashCode
+
 /**
  * A coverage violation observed for the given {@code clazz}.
  */
+@EqualsAndHashCode
 public class CoverageViolation {
     String clazz
     int covered

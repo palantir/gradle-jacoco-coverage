@@ -17,11 +17,6 @@
 package com.palantir.jacoco
 
 import nebula.test.IntegrationSpec
-import nebula.test.functional.ExecutionResult
-import org.w3c.dom.Document
-
-import javax.xml.xpath.XPathConstants
-import javax.xml.xpath.XPathFactory
 
 class JacocoFullReportPluginTest extends IntegrationSpec {
 
@@ -84,7 +79,7 @@ class JacocoFullReportPluginTest extends IntegrationSpec {
     }
 
     def numberMissedInstructions(String coverageXml) {
-        def fullCoverage = JacocoCoverageTask.parseJacocoXmlReport(file(coverageXml).newInputStream())
+        def fullCoverage = JacocoCoverageTask.parseReport(file(coverageXml).newInputStream())
         def missedInstructions = fullCoverage
                 .package
                 .sourcefile.find {it.@name=="Foo.java"}

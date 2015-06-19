@@ -21,25 +21,22 @@ import groovy.util.slurpersupport.GPathResult
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskAction
-import org.w3c.dom.Document
-import org.w3c.dom.NamedNodeMap
-import org.xml.sax.SAXException
-
-import javax.xml.parsers.DocumentBuilder
-import javax.xml.parsers.DocumentBuilderFactory
 
 public class JacocoCoverageTask extends DefaultTask {
 
     private static final OrderBy<CoverageViolation> VIOLATION_ORDER =
             new OrderBy([{ violation -> violation.clazz }, { violation -> violation.type }])
 
-    /** The Jacoco coverage results for each file and coverage type; populated by {@link JacocoCoveragePlugin#apply}. */
+    /**
+     * Coverage results (CoverageType -> CoverageCounter) for every scope, i.e., report name, package name, source file
+     * name, class name. Populated by JacocoCoverageTask#initCoverage, called from JacocoCoveragePlugin#apply.
+     */
     Map<String, Map<CoverageType, CoverageCounter>> coverage = Maps.newHashMap()
 
     @TaskAction
     def verifyCoverage() {
         JacocoCoverageExtension extension = getProject().getExtensions().getByType(JacocoCoverageExtension.class)
-        List<CoverageViolation> violations = applyRules(extension.coverageRules, coverage)
+        List<CoverageViolation> violations = applyRules(extension.coverage, coverage)
         Collections.sort(violations, VIOLATION_ORDER)
         if (!violations.isEmpty()) {
             getLogger().quiet("Found the following Jacoco coverage violations")
@@ -80,20 +77,29 @@ public class JacocoCoverageTask extends DefaultTask {
     }
 
     /**
-     * Returns the Jacoco coverage results as a map <source file> -> (<coverage type> -> (covered cases, missed cases)).
+     * Extracts coverage from given report file and sets the {@code coverage} map accordingly.
      */
-    static Map<String, Map<CoverageType, CoverageCounter>> extractCoverageFromReport(InputStream jacocoXmlReport) {
-        def document = parseJacocoXmlReport(jacocoXmlReport)
+    static Map<String, Map<CoverageType, CoverageCounter>> extractCoverage(GPathResult jacocoXmlReport) {
+        Map<String, Map<CoverageType, CoverageCounter>> map = Maps.newHashMap()
+        ["sourcefile", "class", "package", "report"].each { scope ->
+            map += extractScopeCoverage(jacocoXmlReport, scope)
+        }
+
+        map
+    }
+
+    /**
+     * Returns the Jacoco coverage results as a map <scope name> -> (<coverage type> -> (covered cases, missed cases)).
+     */
+    static Map<String, Map<CoverageType, CoverageCounter>> extractScopeCoverage(GPathResult jacocoXmlReport, String scope) {
         def Map<String, Map<CoverageType, CoverageCounter>> coverage = new HashMap<>()
 
-        document.'**'.findAll { it.name() == "sourcefile" }.each({ sourceFile ->
+        jacocoXmlReport.'**'.findAll { it.name() == scope }.each({ sourceFile ->
             String sourceFileName = sourceFile.@name
             Map<CoverageType, CoverageCounter> submap = coverage.get(sourceFileName, new EnumMap<>(CoverageType.class))
             sourceFile.counter.each({ counter ->
-                if (counter.name().equals("counter")) {
-                    CoverageType type = CoverageType.valueOf(counter.@type.toString())
-                    submap[type] = new CoverageCounter(counter.@covered.toInteger(), counter.@missed.toInteger())
-                }
+                CoverageType type = CoverageType.valueOf(counter.@type.toString())
+                submap[type] = new CoverageCounter(counter.@covered.toInteger(), counter.@missed.toInteger())
             })
         })
 
@@ -101,9 +107,9 @@ public class JacocoCoverageTask extends DefaultTask {
     }
 
     /**
-     * Parses the given Jacoco report into a GPathResult object and returns it.
+     * Parses the given Jacoco XML report into a GPathResult object and returns it.
      */
-    static GPathResult parseJacocoXmlReport(InputStream jacocoXmlReport) {
+    static GPathResult parseReport(InputStream jacocoXmlReport) {
         def parser = new XmlSlurper()
         parser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
         parser.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)

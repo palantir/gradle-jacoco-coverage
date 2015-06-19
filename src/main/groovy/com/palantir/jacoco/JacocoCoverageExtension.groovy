@@ -28,14 +28,14 @@ public class JacocoCoverageExtension {
     def LINE = CoverageType.LINE
     def METHOD = CoverageType.METHOD
 
-    public List<Closure<Double>> coverageRules = new ArrayList<>()
+    public List<Closure<Double>> coverage = new ArrayList<>()
 
     /**
      * Adds a minimum coverage threshold for all files and coverage types.
      * @param value The minimum required threshold, a number in [0,1].
      */
     def threshold(double value) {
-        coverageRules.add({
+        coverage.add({
             CoverageType ct, String str -> value
         })
     }
@@ -56,7 +56,7 @@ public class JacocoCoverageExtension {
      * @param filename The name of the file(s) that this threshold applies to.
      */
     def threshold(double value, CoverageType coverageType, String filename) {
-        coverageRules.add({ CoverageType ct, String str ->
+        coverage.add({ CoverageType ct, String str ->
             if (coverageType == ct && str.equals(filename)) {
                 return value
             }
@@ -71,7 +71,7 @@ public class JacocoCoverageExtension {
      * @param fileNamePattern A regular expression specifying the name of the file(s) that this threshold applies to.
      */
     def threshold(double value, CoverageType coverageType, Pattern fileNamePattern) {
-        coverageRules.add({ CoverageType ct, String str ->
+        coverage.add({ CoverageType ct, String str ->
             if (coverageType == ct && str ==~ fileNamePattern) {
                 return value
             }
@@ -84,7 +84,7 @@ public class JacocoCoverageExtension {
      * @param filename The name of the file(s) that are whitelisted.
      */
     def whitelist(String filename) {
-        coverageRules.add({ CoverageType ct, String str ->
+        coverage.add({ CoverageType ct, String str ->
             if (str.equals(filename)) {
                 return 0.0 // Whitelist.
             }
@@ -97,7 +97,7 @@ public class JacocoCoverageExtension {
      * @param fileNamePattern A regular expression specifying the name of the file(s) that are to be whitelisted.
      */
     def whitelist(Pattern fileNamePattern) {
-        coverageRules.add({ CoverageType ct, String str ->
+        coverage.add({ CoverageType ct, String str ->
             if (str ==~ fileNamePattern) {
                 return 0.0 // Whitelist.
             }

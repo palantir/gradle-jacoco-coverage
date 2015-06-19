@@ -53,9 +53,15 @@
             <counter type="CLASS" missed="1" covered="0"/>
         </sourcefile>
         <counter type="INSTRUCTION" missed="7" covered="0"/>
-        <counter type="LINE" missed="3" covered="0"/>
+        <counter type="LINE" missed="1" covered="2"/>
         <counter type="COMPLEXITY" missed="3" covered="0"/>
         <counter type="METHOD" missed="3" covered="0"/>
         <counter type="CLASS" missed="2" covered="0"/>
     </package>
+    <counter type="INSTRUCTION" missed="5" covered="15"/>
+    <counter type="BRANCH" missed="65" covered="7"/>
+    <counter type="LINE" missed="105" covered="31"/>
+    <counter type="COMPLEXITY" missed="77" covered="6"/>
+    <counter type="METHOD" missed="42" covered="5"/>
+    <counter type="CLASS" missed="20" covered="1"/>
 </report>
