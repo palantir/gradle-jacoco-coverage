@@ -31,42 +31,47 @@ import org.gradle.testing.jacoco.tasks.JacocoReportsContainer
  */
 public class JacocoFullReportPlugin implements Plugin<Project> {
 
+    static def getReportTasks(Project project, JacocoReport exclude) {
+        // Find all projects except for those below "buildSrc".
+        def coreProjects = project.subprojects.findAll({ !it.path.startsWith(':buildSrc') }) + [project]
+        // Find all JacocoReport tasks except for the jacocoFullReport task we're creating here.
+        def reportTasks = coreProjects.collect {
+            it.tasks.withType(JacocoReport).findAll { it != exclude }
+        }.flatten()
+
+        reportTasks
+    }
+
     @Override
     public void apply(Project project) {
         project.plugins.apply(JacocoPlugin)
-        project.evaluationDependsOnChildren()
         JacocoReport fullReportTask = project.tasks.create("jacocoFullReport", JacocoReport)
-        project.afterEvaluate({ p ->
-            fullReportTask.configure {
-                reports.xml.enabled = true
-                reports.html.enabled = true
+        fullReportTask.configure {
+            reports.xml.enabled = true
+            reports.html.enabled = true
 
-                // Find all projects except for those below "buildSrc".
-                def coreProjects = project.subprojects.findAll({ !it.path.startsWith(':buildSrc') }) + [project]
-                // Find all JacocoReport tasks except for the jacocoFullReport task we're creating here.
-                def reportTasks = coreProjects.collect {
-                    it.tasks.withType(JacocoReport).findAll { it != fullReportTask }
-                }.flatten()
-                project.logger.info("Setting up jacocoFullReport for report tasks: " + reportTasks)
-
-                // Implement fix mentioned in Gradle Source: https://github.com/gradle/gradle/blob/master/subprojects/jacoco/src/main/groovy/org/gradle/testing/jacoco/tasks/JacocoReport.groovy
-                setOnlyIf {
-                    executionData.any { it.exists() }
-                }
-                doFirst {
-                    executionData = project.files(executionData.findAll { it.exists() })
-                }
-
-                // Filter for nulls since some JacacoReport tasks may have no classDirectories or sourceDirectories
-                // configured, for example if there are no tests for a subproject.
-                executionData reportTasks.executionData
-                classDirectories = new UnionFileCollection(reportTasks.collect { it.classDirectories }.findAll {
-                    it != null
-                })
-                sourceDirectories = new UnionFileCollection(reportTasks.collect { it.sourceDirectories }.findAll {
-                    it != null
-                })
+            // Implement fix mentioned in Gradle Source: https://github.com/gradle/gradle/blob/master/subprojects/jacoco/src/main/groovy/org/gradle/testing/jacoco/tasks/JacocoReport.groovy
+            setOnlyIf {
+                executionData.files.any { it.exists() }
             }
-        })
+            doFirst {
+                executionData = project.files(executionData.findAll { it.exists() }.flatten())
+                project.logger.info("Setting up jacocoFullReport for: " + getReportTasks(project, fullReportTask))
+            }
+
+            // Filter for nulls since some JacacoReport tasks may have no classDirectories or sourceDirectories
+            // configured, for example if there are no tests for a subproject.
+            executionData project.files({ getReportTasks(project, fullReportTask).executionData })
+            classDirectories = project.files({
+                getReportTasks(project, fullReportTask).collect { it.classDirectories }.findAll {
+                    it != null
+                }
+            })
+            sourceDirectories = project.files({
+                getReportTasks(project, fullReportTask).collect { it.sourceDirectories }.findAll {
+                    it != null
+                }
+            })
+        }
     }
 }

@@ -79,4 +79,26 @@ class JacocoCoveragePluginTest extends IntegrationSpec {
         then:
         runTasksSuccessfully('test', 'checkCoverage')
     }
+
+    def 'All syntax variations work'() {
+        when:
+        writeHelloWorld('nebula.hello')
+        writeUnitTest(false)
+        buildFile << standardBuildFile
+        buildFile << '''
+            jacocoCoverage {
+                threshold 0.0
+                threshold 0.0, BRANCH
+                threshold 0.0, "MyClass.java"
+                threshold 0.0, ~"MyClass\\\\.*"
+                threshold 0.0, LINE, "MyClass.java"
+                threshold 0.0, COMPLEXITY, ~"MyClass\\\\..*"
+                whitelist "MyClass.java"
+                whitelist ~"MyClass.*"
+            }
+        '''.stripIndent()
+
+        then:
+        runTasksSuccessfully('test', 'checkCoverage')
+    }
 }

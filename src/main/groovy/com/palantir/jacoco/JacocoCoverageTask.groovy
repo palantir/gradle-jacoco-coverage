@@ -17,28 +17,26 @@
 package com.palantir.jacoco
 
 import com.google.common.collect.Maps
+import groovy.util.slurpersupport.GPathResult
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskAction
-import org.w3c.dom.Document
-import org.w3c.dom.NamedNodeMap
-import org.xml.sax.SAXException
-
-import javax.xml.parsers.DocumentBuilder
-import javax.xml.parsers.DocumentBuilderFactory
 
 public class JacocoCoverageTask extends DefaultTask {
 
     private static final OrderBy<CoverageViolation> VIOLATION_ORDER =
             new OrderBy([{ violation -> violation.clazz }, { violation -> violation.type }])
 
-    /** The Jacoco coverage results for each file and coverage type; populated by {@link JacocoCoveragePlugin#apply}. */
+    /**
+     * Coverage results (CoverageType -> CoverageCounter) for every scope, i.e., report name, package name, source file
+     * name, class name. Populated by JacocoCoverageTask#initCoverage, called from JacocoCoveragePlugin#apply.
+     */
     Map<String, Map<CoverageType, CoverageCounter>> coverage = Maps.newHashMap()
 
     @TaskAction
     def verifyCoverage() {
         JacocoCoverageExtension extension = getProject().getExtensions().getByType(JacocoCoverageExtension.class)
-        List<CoverageViolation> violations = applyRules(extension.coverageRules, coverage)
+        List<CoverageViolation> violations = applyRules(extension.coverage, coverage)
         Collections.sort(violations, VIOLATION_ORDER)
         if (!violations.isEmpty()) {
             getLogger().quiet("Found the following Jacoco coverage violations")
@@ -79,23 +77,29 @@ public class JacocoCoverageTask extends DefaultTask {
     }
 
     /**
-     * Returns the Jacoco coverage results as a map <source file> -> (<coverage type> -> (covered cases, missed cases)).
+     * Extracts coverage from given report file and sets the {@code coverage} map accordingly.
      */
-    static def Map<String, Map<CoverageType, CoverageCounter>> extractCoverageFromReport(InputStream jacocoXmlReport) {
+    static Map<String, Map<CoverageType, CoverageCounter>> extractCoverage(GPathResult jacocoXmlReport) {
+        Map<String, Map<CoverageType, CoverageCounter>> map = Maps.newHashMap()
+        ["sourcefile", "class", "package", "report"].each { scope ->
+            map += extractScopeCoverage(jacocoXmlReport, scope)
+        }
+
+        map
+    }
+
+    /**
+     * Returns the Jacoco coverage results as a map <scope name> -> (<coverage type> -> (covered cases, missed cases)).
+     */
+    static Map<String, Map<CoverageType, CoverageCounter>> extractScopeCoverage(GPathResult jacocoXmlReport, String scope) {
         def Map<String, Map<CoverageType, CoverageCounter>> coverage = new HashMap<>()
-        Document document = parseJacocoXmlReport(jacocoXmlReport)
-        document.getElementsByTagName("sourcefile").each({ sourceFile ->
-            String sourceFileName = sourceFile.getAttributes().getNamedItem("name").getNodeValue()
-            Map<CoverageType, CoverageCounter> submap =
-                    coverage.get(sourceFileName, new EnumMap<>(CoverageType.class))
-            sourceFile.getChildNodes().each({ counter ->
-                if (counter.getNodeName().equals("counter")) {
-                    NamedNodeMap map = counter.getAttributes()
-                    CoverageType type = CoverageType.valueOf(map.getNamedItem("type").getNodeValue())
-                    submap[type] = new CoverageCounter(
-                            map.getNamedItem("covered").getNodeValue().toInteger(),
-                            map.getNamedItem("missed").getNodeValue().toInteger())
-                }
+
+        jacocoXmlReport.'**'.findAll { it.name() == scope }.each({ sourceFile ->
+            String sourceFileName = sourceFile.@name
+            Map<CoverageType, CoverageCounter> submap = coverage.get(sourceFileName, new EnumMap<>(CoverageType.class))
+            sourceFile.counter.each({ counter ->
+                CoverageType type = CoverageType.valueOf(counter.@type.toString())
+                submap[type] = new CoverageCounter(counter.@covered.toInteger(), counter.@missed.toInteger())
             })
         })
 
@@ -103,22 +107,14 @@ public class JacocoCoverageTask extends DefaultTask {
     }
 
     /**
-     * Parses the given Jacoco report into a DOM object and returns it.
+     * Parses the given Jacoco XML report into a GPathResult object and returns it.
      */
-    static Document parseJacocoXmlReport(InputStream jacocoXmlReport) {
-        Document document
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance()
-            factory.setValidating(false)
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
-            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
-            factory.setFeature("http://xml.org/sax/features/namespaces", false)
-            DocumentBuilder documentBuilder = factory.newDocumentBuilder()
-            document = documentBuilder.parse(jacocoXmlReport)
-        } catch (SAXException | IOException e) {
-            throw new RuntimeException("Failed to parse Jacoco XML report", e)
-        }
+    static GPathResult parseReport(InputStream jacocoXmlReport) {
+        def parser = new XmlSlurper()
+        parser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
+        parser.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
+        parser.setFeature("http://xml.org/sax/features/namespaces", false)
 
-        document
+        parser.parse(jacocoXmlReport)
     }
 }

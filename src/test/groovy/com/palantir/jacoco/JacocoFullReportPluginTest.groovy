@@ -17,11 +17,6 @@
 package com.palantir.jacoco
 
 import nebula.test.IntegrationSpec
-import nebula.test.functional.ExecutionResult
-import org.w3c.dom.Document
-
-import javax.xml.xpath.XPathConstants
-import javax.xml.xpath.XPathFactory
 
 class JacocoFullReportPluginTest extends IntegrationSpec {
 
@@ -37,10 +32,6 @@ class JacocoFullReportPluginTest extends IntegrationSpec {
             }
         }
     '''.stripIndent()
-
-    def setup() {
-        fork = true  // Run test in separate JVM in order to isolate classloaders. Sadly, this makes debugging hard.
-    }
 
     def writeTestableClass(File baseDir) {
         createFile('src/main/java/Foo.java', baseDir) << '''
@@ -88,12 +79,14 @@ class JacocoFullReportPluginTest extends IntegrationSpec {
     }
 
     def numberMissedInstructions(String coverageXml) {
-        def xPath = XPathFactory.newInstance().newXPath();
-        def missedInstructionsXPath =
-            '/report/package/sourcefile[@name="Foo.java"]/counter[@type="INSTRUCTION"]/@missed'
-        Document fullCoverage = JacocoCoverageTask.parseJacocoXmlReport(file(coverageXml).newInputStream())
-        def missedInstructions = (org.w3c.dom.Node) xPath.evaluate(missedInstructionsXPath, fullCoverage, XPathConstants.NODE)
-        return missedInstructions.nodeValue.toInteger()
+        def fullCoverage = JacocoCoverageTask.parseReport(file(coverageXml).newInputStream())
+        def missedInstructions = fullCoverage
+                .package
+                .sourcefile.find {it.@name=="Foo.java"}
+                .counter.find {it.@type=="INSTRUCTION"}
+                .@missed.toInteger()
+
+        missedInstructions
     }
 
     def 'jacoco-full-report reports on union of execution data'() {
@@ -144,8 +137,43 @@ class JacocoFullReportPluginTest extends IntegrationSpec {
         writeFooATest(testFooA.directory)
 
         then:
-        runTasksSuccessfully('test', 'jacocoTestReport', 'jacocoFullReport')
-        assert numberMissedInstructions("build/reports/jacoco/jacocoFullReport/jacocoFullReport.xml") == 4
+        runTasksSuccessfully('test', 'jacocoTestReport')
+        runTasksSuccessfully('jacocoFullReport')
         assert numberMissedInstructions("testFooA/build/reports/jacoco/test/jacocoTestReport.xml") == 4
+        assert numberMissedInstructions("build/reports/jacoco/jacocoFullReport/jacocoFullReport.xml") == 4
+    }
+
+    def 'jacocoFullReport object has non-null sourceDirectories even when task did not run'() {
+        when:
+        buildFile << 'apply plugin: "jacoco-full-report"'
+        buildFile << standardBuildFile
+        buildFile << '''
+            // Java source directories are unknown before sub project is evaluated.
+            assert tasks.jacocoFullReport.sourceDirectories.size() == 0
+
+            project.afterEvaluate {
+                assert tasks.jacocoFullReport.sourceDirectories.size() == 1
+            }
+
+            task afterTest() {
+                dependsOn tasks.test
+                doLast {
+                    assert tasks.jacocoFullReport.sourceDirectories.size() == 1
+                }
+            }
+        '''.stripIndent()
+
+        def subProjects = helper.create(["testFooA"])
+        def testFooA = subProjects["testFooA"]
+        testFooA.buildGradle << '''
+            apply plugin: 'java'
+            apply plugin: 'jacoco'
+            jacocoTestReport.reports.xml.enabled = true
+        '''.stripIndent()
+        writeTestableClass(testFooA.directory)
+        writeFooATest(testFooA.directory)
+
+        then:
+        runTasksSuccessfully('test')
     }
 }
