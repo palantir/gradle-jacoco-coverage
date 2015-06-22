@@ -18,6 +18,9 @@ package com.palantir.jacoco
 
 import nebula.test.IntegrationSpec
 
+import java.nio.file.Files
+import java.nio.file.Paths
+
 class JacocoFullReportPluginTest extends IntegrationSpec {
 
     def standardBuildFile = '''
@@ -78,22 +81,20 @@ class JacocoFullReportPluginTest extends IntegrationSpec {
         }'''.stripIndent()
     }
 
-    def numberMissedInstructions(String coverageXml) {
-        def fullCoverage = JacocoCoverageTask.parseReport(file(coverageXml).newInputStream())
-        def missedInstructions = fullCoverage
-                .package
-                .sourcefile.find {it.@name=="Foo.java"}
-                .counter.find {it.@type=="INSTRUCTION"}
-                .@missed.toInteger()
+    def setupSubprojectA() {
+        def subProjects = helper.create(["testFooA"])
 
-        missedInstructions
+        def testFooA = subProjects["testFooA"]
+        testFooA.buildGradle << '''
+            apply plugin: 'java'
+            apply plugin: 'jacoco'
+            jacocoTestReport.reports.xml.enabled = true
+        '''.stripIndent()
+        writeTestableClass(testFooA.directory)
+        writeFooATest(testFooA.directory)
     }
 
-    def 'jacoco-full-report reports on union of execution data'() {
-        when:
-        buildFile << 'apply plugin: "jacoco-full-report"'
-        buildFile << standardBuildFile
-
+    def setupSubprojectsAb() {
         def subProjects = helper.create(["testFooA", "testFooB"])
 
         def testFooA = subProjects["testFooA"]
@@ -113,6 +114,39 @@ class JacocoFullReportPluginTest extends IntegrationSpec {
         '''.stripIndent()
         writeTestableClass(testFooB.directory)
         writeFooBTest(testFooB.directory)
+    }
+
+    def numberMissedInstructions(String coverageXml) {
+        def fullCoverage = JacocoCoverageTask.parseReport(file(coverageXml).newInputStream())
+        def missedInstructions = fullCoverage
+                .package
+                .sourcefile.find {it.@name=="Foo.java"}
+                .counter.find {it.@type=="INSTRUCTION"}
+                .@missed.toInteger()
+
+        missedInstructions
+    }
+
+    def 'jacoco-full-report can exclude sub projects'() {
+        when:
+        buildFile << 'apply plugin: "jacoco-full-report"'
+        buildFile << standardBuildFile
+        buildFile << '''
+        jacocoFull {
+            excludeProject ":testFooA", ":testFooB"
+        }'''
+        setupSubprojectsAb()
+
+        then:
+        runTasksSuccessfully('test', 'jacocoTestReport', 'jacocoFullReport')
+        assert !Files.exists(Paths.get("build/reports/jacoco/jacocoFullReport/jacocoFullReport.xml"))
+    }
+
+    def 'jacoco-full-report reports on union of execution data'() {
+        when:
+        buildFile << 'apply plugin: "jacoco-full-report"'
+        buildFile << standardBuildFile
+        setupSubprojectsAb()
 
         then:
         runTasksSuccessfully('test', 'jacocoTestReport', 'jacocoFullReport')
@@ -125,16 +159,8 @@ class JacocoFullReportPluginTest extends IntegrationSpec {
         buildFile << 'apply plugin: "jacoco-full-report"'
         buildFile << standardBuildFile
 
-        def subProjects = helper.create(["testFooA", "testFooB"])
-
-        def testFooA = subProjects["testFooA"]
-        testFooA.buildGradle << '''
-            apply plugin: 'java'
-            apply plugin: 'jacoco'
-            jacocoTestReport.reports.xml.enabled = true
-        '''.stripIndent()
-        writeTestableClass(testFooA.directory)
-        writeFooATest(testFooA.directory)
+        setupSubprojectA()
+        helper.addSubproject("testFooB")
 
         then:
         runTasksSuccessfully('test', 'jacocoTestReport')
@@ -162,16 +188,7 @@ class JacocoFullReportPluginTest extends IntegrationSpec {
                 }
             }
         '''.stripIndent()
-
-        def subProjects = helper.create(["testFooA"])
-        def testFooA = subProjects["testFooA"]
-        testFooA.buildGradle << '''
-            apply plugin: 'java'
-            apply plugin: 'jacoco'
-            jacocoTestReport.reports.xml.enabled = true
-        '''.stripIndent()
-        writeTestableClass(testFooA.directory)
-        writeFooATest(testFooA.directory)
+        setupSubprojectA()
 
         then:
         runTasksSuccessfully('test')

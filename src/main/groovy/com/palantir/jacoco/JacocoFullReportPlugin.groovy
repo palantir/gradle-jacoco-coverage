@@ -32,10 +32,15 @@ import org.gradle.testing.jacoco.tasks.JacocoReportsContainer
 public class JacocoFullReportPlugin implements Plugin<Project> {
 
     static def getReportTasks(Project project, JacocoReport exclude) {
-        // Find all projects except for those below "buildSrc".
-        def coreProjects = project.subprojects.findAll({ !it.path.startsWith(':buildSrc') }) + [project]
+        // Find list of projects whose Jacoco report tasks are to be considered.
+        def extension = project.extensions.findByType(JacocoFullReportExtension)
+        def projects = project.allprojects
+        projects.removeAll {
+            extension.excludeProjects.contains(it.path)
+        }
+
         // Find all JacocoReport tasks except for the jacocoFullReport task we're creating here.
-        def reportTasks = coreProjects.collect {
+        def reportTasks = projects.collect {
             it.tasks.withType(JacocoReport).findAll { it != exclude }
         }.flatten()
 
@@ -45,6 +50,7 @@ public class JacocoFullReportPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.plugins.apply(JacocoPlugin)
+        project.getExtensions().create("jacocoFull", JacocoFullReportExtension)
         JacocoReport fullReportTask = project.tasks.create("jacocoFullReport", JacocoReport)
         fullReportTask.configure {
             reports.xml.enabled = true

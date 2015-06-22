@@ -1,5 +1,8 @@
 # Changelog for Gradle Jacoco Coverage Plugin
 
+## 0.1.5
+- Add jacocoFull extension with excludeProject configuration
+
 ## 0.1.4
 - Generalise from file-name-based to scope-based coverage specification (no configuration back-compat break)
 - Evaluate JacocoFullReport inputs lazily

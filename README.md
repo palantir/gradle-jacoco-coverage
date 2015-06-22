@@ -99,3 +99,10 @@ if the `test` task has run previously in order to generated the Jacoco execution
 
 The `jacocoFullReport` task is a standard `JacocoReport` task and has the same configuration options as the vanilla
 [Gradle Jacoco](https://docs.gradle.org/current/userguide/jacoco_plugin.html) task.
+
+By default, Jacoco report tasks of all projects and subprojects are considered when compiling the full report. Projects
+can be excluded from consideration through the `jacocoFull` extension:
+
+    jacocoFull {
+        excludeProject ":my-sub-project", ":buildSrc"
+    }
