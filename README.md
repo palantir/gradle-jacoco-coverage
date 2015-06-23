@@ -77,6 +77,28 @@ The following examples describe the syntax:
         whitelist ~".*Test.java"
     }
 
+Given the observed code coverage for a scope and coverage type (e.g., _line_ coverage 57% for class
+`org/product/module/MyClass`), the *lowest* specified threshold matching the scope and coverage type is enforced. For
+example, the specification
+
+    jacocoCoverage {
+        threshold 0.5, BRANCH
+        threshold 0.3, ~"org/company/module.*"
+    }
+
+will enforce 50% branch coverage for every file, class, package, and report, and 30% coverage for any sub-package and
+class in package `org/company/module`. In particular, branch coverage within `org/company/module` is required to be 30%
+rather than 50% since the lowest specified threshold dominates. This implies that specific coverage types and scopes can
+be excluded from any thresholds globally, for example:
+
+    jacocoCoverage {
+        threshold 0.0, BRANCH // Never enforce branch coverage.
+        threshold 0.0, ~".*\\.java" // Never enforce coverage on files, use thresholds for classes instead.
+        threshold 0.0, ~"org/thirdparty/.*" // Never enforce coverage on thirdparty package.
+    }
+
+
+
 ## jacoco-full-report
 
 #### Quickstart
