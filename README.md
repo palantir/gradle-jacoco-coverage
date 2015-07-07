@@ -13,7 +13,7 @@ Source code: [https://github.com/palantir/gradle-jacoco-coverage](https://github
 
 ## jacoco-coverage
 
-#### Quick start
+### Quick start
 
 Add the following configuration to `build.gradle`:
 
@@ -22,86 +22,119 @@ Add the following configuration to `build.gradle`:
             classpath 'com.palantir:jacoco-coverage:<version>'
         }
     }
-    
+
+    apply plugin: 'java'
     apply plugin: 'jacoco-coverage'
     jacocoCoverage {
-        threshold 0.5  // Enfore minimum code coverage of 50% for every file, class, package, and project.
-        whitelist "MyClass.java"  // Exempt files named MyClass.java from coverage requirements.
+        // Enfore minimum code coverage of 50% for every Java file
+        _file 0.5
+
+        // Whitelist files named MyClass.java from coverage requirements.
+        _file 0.0, "MyClass.java"
     }
 
 Subsequent `./gradlew build` runs will fail if the configured minimum coverage thresholds are not achieved by the
 project's tests. (Note that `build` depends on `check` which depends on the `jacocoCoverage` task added by this plugin.)
 
 
-#### Configuration
+### Configuration
 
-Code coverage requirements can be specified for different scopes:
-- average coverage in a report
-- average coverage in a package
-- coverage in a class
-- coverage in a file
+Code coverage requirements are specified separately for the different "realms" reported by Jacoco:
+- average coverage in a report, specified by the `-report` keyword
+- average coverage in a package, specified by the `_package` keyword
+- coverage in a class, specified by the `_class` keyword
+- coverage in a file, specified by the `_file` keyword
 
-Scopes are specified either by their exact name as it appears in the Jacoco XML report, for example package scope
-`"org/product/module"`, file scope `"MyClass.java"`, class scope `"org/product/module/MyCLass"`), or by a regular
-expression matching those scope names, for example `~"org.*"` for all packages or class scopes starting with `org`.
+Each realm contains a number of so-called "scopes": 
+- The file realm contains one scope for every source file, named by file name, e.g., "MyClass.java". Note that file
+scopes for files with the same name in different packages or folders clash; in such cases coverage thresholds should be
+specified in the class realm.
+- The class realm contains one scope for every (top-level, inner, or anonymous) class, named by fully qualified class
+name, e.g., "org/package/MyClass$1".
+- The package realm contains one scope for every package, named by the package name, e.g., "org/package".
+- The report realm contains exactly one scope which is usually derived from the name of the corresponding Gradle (sub-)
+project.
 
-Coverage requirements are with respect to one of the Jacoco-defined types of coverage, e.g., lines covered or branches
-covered.
+Scopes can be specified by exact name, e.g., `"MyClass.java"`, or by a Groovy regex pattern matching an arbitrary number
+of scopes, e.g., `~'org/package.*'` for all sub-packages of "org/mypackage".
 
-The following examples describe the syntax:
+#### Configuration syntax
+
+Coverage requirements are written in terms of a realm, a scope specification, and one (or several) of the Jacoco-defined
+types of coverage, e.g., lines covered or branches covered. The following syntax variations are supported:
+
+    <realm> <threshold>
+    <realm> <threshold>, <coverage type>
+    <realm> <threshold>, <scope name>
+    <realm> <threshold>, <coverage type>, <scope name>
+    <realm> <threshold>, <scope pattern>
+    <realm> <threshold>, <coverage type>, <scope pattern>
+
+, where:
+- `<realm>` is one of `_file`, `_class`, `_package`, `_report`
+- `<threshold>` is a Groovy `double`
+- `<coverage type>` is one of `BRANCH`, `CLASS`, `COMPLEXITY`, `INSTRUCTION`, `LINE`, `METHOD`
+- `<scope name>` is a Groovy string
+- `<scope pattern>` is a Groovy regex pattern
+
+Examples:
 
     jacocoCoverage {
-        // Minimum code coverage of 50% for all scopes (files, classes, packages, reports) and coverage types.
-        threshold 0.5
+        // Minimum code coverage of 50% for all scopes in the file realm (i.e., for all files) and for all coverage types.
+        _file 0.5
 
-        // Minimum 'branch' coverage of 30% for all scopes.
-        // Available coverage types: BRANCH, CLASS, COMPLEXITY, INSTRUCTION, LINE, METHOD.
-        threshold 0.3, BRANCH
-
-        // Minimum average coverage of 30% in given package.
-        threshold 0.3, "org/company/module"
-
-        // Minimum average coverage of 50% in report "my-project; the report name is usually the Gradle project name.
-        threshold 0.5, "my-project" 
+        // Minimum 'branch' coverage of 30% for all files.
+        _file 0.3, BRANCH
 
         // Minimum 'line' coverage of 10% for files (in any directory) whose name matches the given regular expression.
-        threshold 0.1, LINE, ~"(Indentation|Wrapping)\\.java"
+        _file 0.1, LINE, ~"(Indentation|Wrapping)\\.java"
 
         // Minimum 'line' coverage of 10% for files named "Indentation.java" (case-sensitive, in any directory).
         // (Note: This syntax uses exact string match against the file name while the regex syntax requires escaping.)
-        threshold 0.1, LINE, "Indentation.java"
+        _file 0.1, LINE, "Indentation.java"
+
+        // Minimum coverage of 30% in the given class.
+        _class 0.3, "org/company/module/MyClass"
+
+        // Minimum average coverage of 30% in given package.
+        _package 0.3, "org/company/module"
+
+        // Minimum average coverage of 50% in report "my-project; the report name is usually the Gradle project name.
+        _report 0.5, "my-project" 
 
         // Scopes can be exempt from all coverage requirements by exact scope name or scope name pattern.
-        whitelist "MyClass.java"
-        whitelist "org/company/module"
-        whitelist ~".*Test.java"
+        _file 0.0, "MyClass.java"
+        _package 0.0, "org/company/module"
+        _file 0.0, ~".*Test.java"
     }
 
-Given the observed code coverage for a scope and coverage type (e.g., _line_ coverage 57% for class
+#### Configuration semantics
+
+Given the observed code coverage for a realm, scope, and coverage type (e.g., _line_ coverage 47% for class
 `org/product/module/MyClass`), the *lowest* specified threshold matching the scope and coverage type is enforced. For
 example, the specification
 
     jacocoCoverage {
-        threshold 0.5, BRANCH
-        threshold 0.3, ~"org/company/module.*"
+        _class 0.5, BRANCH
+        _class 0.3, "org/company/module/MyClass"
     }
 
-will enforce 50% branch coverage for every file, class, package, and report, and 30% coverage for any sub-package and
-class in package `org/company/module`. In particular, branch coverage within `org/company/module` is required to be 30%
-rather than 50% since the lowest specified threshold dominates. This implies that specific coverage types and scopes can
-be excluded from any thresholds globally, for example:
+will enforce 50% branch coverage for every class, and 30% coverage for class `org/company/module/MyClass` for all
+coverage types. In particular, branch coverage for `org/company/module/MyClass` is required to be at least 30% rather
+than 50% since the lowest specified threshold dominates. This implies that specific coverage types and scopes can be
+excluded from any thresholds globally, for example:
 
     jacocoCoverage {
-        threshold 0.0, BRANCH // Never enforce branch coverage.
-        threshold 0.0, ~".*\\.java" // Never enforce coverage on files, use thresholds for classes instead.
-        threshold 0.0, ~"org/thirdparty/.*" // Never enforce coverage on thirdparty package.
+        _package 0.0, BRANCH // Never enforce branch coverage at the package level
+        _file 0.0, ~".*Util\\.java" // Never enforce coverage on Java files like XyzUtil.java
+        _package 0.0, ~"org/thirdparty/.*" // Never enforce coverage on thirdparty package.
     }
 
 
 
 ## jacoco-full-report
 
-#### Quickstart
+### Quickstart
 
 Add the following configuration to the `build.gradle` configuration of the root project:
 
@@ -117,7 +150,7 @@ Subsequent `./gradle test jacocoFullReport` runs will generate a test report in 
 that evaluates the coverage yielded by all subprojects combined. (Note that generally Jacoco reports are only generated
 if the `test` task has run previously in order to generated the Jacoco execution data.)
 
-#### Configuration
+### Configuration
 
 The `jacocoFullReport` task is a standard `JacocoReport` task and has the same configuration options as the vanilla
 [Gradle Jacoco](https://docs.gradle.org/current/userguide/jacoco_plugin.html) task.
@@ -128,3 +161,6 @@ can be excluded from consideration through the `jacocoFull` extension:
     jacocoFull {
         excludeProject ":my-sub-project", ":buildSrc"
     }
+
+Note that `jacoco-full-report` and `jacoco-coverage` can be combined in order to enforce coverage requirements over the
+combined coverage of several subprojects.

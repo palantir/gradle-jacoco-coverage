@@ -1,5 +1,9 @@
 # Changelog for Gradle Jacoco Coverage Plugin
 
+## 0.2.0
+- Introduction of coverage "realms" (file, class, package, scope) in lieu of purely regex-based threshold definitions
+- New threshold specification syntax based on realms: '_file 0.5' or '_package 0.5' instead of 'threshold 0.5 PATTERN'
+
 ## 0.1.5
 - Add jacocoFull extension with excludeProject configuration
 

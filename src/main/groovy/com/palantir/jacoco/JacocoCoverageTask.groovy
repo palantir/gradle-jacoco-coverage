@@ -17,6 +17,7 @@
 package com.palantir.jacoco
 
 import com.google.common.collect.Maps
+import com.google.common.collect.Multimap
 import groovy.util.slurpersupport.GPathResult
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
@@ -28,10 +29,11 @@ public class JacocoCoverageTask extends DefaultTask {
             new OrderBy([{ violation -> violation.clazz }, { violation -> violation.type }])
 
     /**
-     * Coverage results (CoverageType -> CoverageCounter) for every scope, i.e., report name, package name, source file
-     * name, class name. Populated by JacocoCoverageTask#initCoverage, called from JacocoCoveragePlugin#apply.
+     * Coverage results (CoverageType -> CoverageCounter) for different scopes, i.e., report name, package name, source
+     * file name, class name. Populated by {@link JacocoCoverageTask#extractCoverage}, called from
+     * {@link JacocoCoveragePlugin#apply}.
      */
-    Map<String, Map<CoverageType, CoverageCounter>> coverage = Maps.newHashMap()
+    Map<CoverageRealm, Map<String, CoverageObservation>> coverage = Maps.newHashMap()
 
     @TaskAction
     def verifyCoverage() {
@@ -47,12 +49,23 @@ public class JacocoCoverageTask extends DefaultTask {
         }
     }
 
+    static List<CoverageViolation> applyRules(
+            Multimap<CoverageRealm, Closure<Double>> rules,
+            Map<CoverageRealm, Map<String, CoverageObservation>> coverageObservations) {
+        List<CoverageViolation> violations = []
+        CoverageRealm.values().each { realm ->
+            violations += applyRules(rules.get(realm), coverageObservations.get(realm))
+        }
+
+        violations
+    }
+
     /**
      * Applies the given coverage rules to the observed code coverage observations and returns a list of violating
      * observations.
      */
-    static List<CoverageViolation> applyRules(List<Closure<Double>> rules,
-                                              Map<String, Map<CoverageType, CoverageCounter>> coverageObservations) {
+    static List<CoverageViolation> applyRules(Collection<Closure<Double>> rules,
+                                              Map<String, CoverageObservation> coverageObservations) {
 
         List<CoverageViolation> violations = []
         coverageObservations.each { clazz, clazzScores ->
@@ -79,24 +92,25 @@ public class JacocoCoverageTask extends DefaultTask {
     /**
      * Extracts coverage from given report file and sets the {@code coverage} map accordingly.
      */
-    static Map<String, Map<CoverageType, CoverageCounter>> extractCoverage(GPathResult jacocoXmlReport) {
-        Map<String, Map<CoverageType, CoverageCounter>> map = Maps.newHashMap()
-        ["sourcefile", "class", "package", "report"].each { scope ->
-            map += extractScopeCoverage(jacocoXmlReport, scope)
+    static Map<CoverageRealm, Map<String, CoverageObservation>> extractCoverage(GPathResult jacocoXmlReport) {
+        Map<CoverageRealm, Map<String, CoverageObservation>> extractedCoverage = Maps.newHashMap()
+        CoverageRealm.values().each { realm ->
+            extractedCoverage.put(realm, extractScopeCoverage(jacocoXmlReport, realm.tagName));
+
         }
 
-        map
+        extractedCoverage
     }
 
     /**
      * Returns the Jacoco coverage results as a map <scope name> -> (<coverage type> -> (covered cases, missed cases)).
      */
-    static Map<String, Map<CoverageType, CoverageCounter>> extractScopeCoverage(GPathResult jacocoXmlReport, String scope) {
-        def Map<String, Map<CoverageType, CoverageCounter>> coverage = new HashMap<>()
+    static Map<String, CoverageObservation> extractScopeCoverage(GPathResult jacocoXmlReport, String scope) {
+        def Map<String, CoverageObservation> coverage = new HashMap<>()
 
         jacocoXmlReport.'**'.findAll { it.name() == scope }.each({ sourceFile ->
             String sourceFileName = sourceFile.@name
-            Map<CoverageType, CoverageCounter> submap = coverage.get(sourceFileName, new EnumMap<>(CoverageType.class))
+            CoverageObservation submap = coverage.get(sourceFileName, new CoverageObservation())
             sourceFile.counter.each({ counter ->
                 CoverageType type = CoverageType.valueOf(counter.@type.toString())
                 submap[type] = new CoverageCounter(counter.@covered.toInteger(), counter.@missed.toInteger())
