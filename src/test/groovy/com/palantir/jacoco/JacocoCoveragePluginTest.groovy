@@ -57,12 +57,13 @@ class JacocoCoveragePluginTest extends IntegrationSpec {
         buildFile << standardBuildFile
         buildFile << '''
             jacocoCoverage {
-                threshold 1.0
+                fileThreshold 1.0
             }
         '''.stripIndent()
 
         then:
-        runTasksWithFailure('test', 'checkCoverage')
+        def result = runTasksWithFailure('test', 'checkCoverage')
+        assert result.standardOutput.contains("Found the following Jacoco coverage violations")
     }
 
     def 'checkCoverage succeeds when no coverage is required'() {
@@ -72,7 +73,7 @@ class JacocoCoveragePluginTest extends IntegrationSpec {
         buildFile << standardBuildFile
         buildFile << '''
             jacocoCoverage {
-                threshold 0.0
+                fileThreshold 0.0
             }
         '''.stripIndent()
 
@@ -87,18 +88,42 @@ class JacocoCoveragePluginTest extends IntegrationSpec {
         buildFile << standardBuildFile
         buildFile << '''
             jacocoCoverage {
-                threshold 0.0
-                threshold 0.0, BRANCH
-                threshold 0.0, "MyClass.java"
-                threshold 0.0, ~"MyClass\\\\.*"
-                threshold 0.0, LINE, "MyClass.java"
-                threshold 0.0, COMPLEXITY, ~"MyClass\\\\..*"
-                whitelist "MyClass.java"
-                whitelist ~"MyClass.*"
+                fileThreshold 0.0
+                fileThreshold 0.0, BRANCH
+                fileThreshold 0.0, "HelloWorld.java"
+                fileThreshold 0.0, ~"HelloWorld\\\\.*"
+                fileThreshold 0.0, LINE, "HelloWorld.java"
+                fileThreshold 0.0, COMPLEXITY, ~"HelloWorld\\\\..*"
+
+                classThreshold 0.0, LINE, "nebula/hello/HelloWorld"
+                packageThreshold 0.0, LINE, "nebula/hello"
+                reportThreshold 0.0, LINE, "All-syntax-variations-work"
             }
         '''.stripIndent()
 
         then:
-        runTasksSuccessfully('test', 'checkCoverage')
+        runTasksSuccessfully('build', 'checkCoverage')
+    }
+
+    def 'Violations are reported for every realm'() {
+        when:
+        writeHelloWorld('nebula.hello')
+        writeUnitTest(false)
+        buildFile << standardBuildFile
+        buildFile << '''
+            jacocoCoverage {
+                fileThreshold 1.0, LINE, "HelloWorld.java"
+                classThreshold 1.0, LINE, "nebula/hello/HelloWorld"
+                packageThreshold 1.0, LINE, "nebula/hello"
+                reportThreshold 1.0, LINE, "Violations-are-reported-for-every-realm"
+            }
+        '''.stripIndent()
+
+        then:
+        def result = runTasksWithFailure('test', 'checkCoverage')
+        assert result.standardOutput.contains('Violations-are-reported-for-every-realm (0/3 LINE coverage < 1.00000)')
+        assert result.standardOutput.contains('HelloWorld.java (0/3 LINE coverage < 1.00000)')
+        assert result.standardOutput.contains('nebula/hello (0/3 LINE coverage < 1.00000)')
+        assert result.standardOutput.contains('nebula/hello/HelloWorld (0/3 LINE coverage < 1.00000)')
     }
 }

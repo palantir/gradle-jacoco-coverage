@@ -16,28 +16,13 @@
 
 package com.palantir.jacoco;
 
+import java.util.EnumMap;
+
 /**
- * Holds the coverage observations for a single scope and coverage type.
+ * The coverage observations (e.g., as extracted from the Jacoco XML report) for one scope.
  */
-public final class CoverageCounter {
-    private final int covered;
-    private final int missed;
-
-    CoverageCounter(int covered, int missed) {
-        this.covered = covered;
-        this.missed = missed;
-    }
-
-    public int getCovered() {
-        return covered;
-    }
-
-    public int getMissed() {
-        return missed;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Covered: %d, Missed: %d", covered, missed);
+public final class CoverageObservation extends EnumMap<CoverageType, CoverageCounter> {
+    public CoverageObservation() {
+        super(CoverageType.class);
     }
 }

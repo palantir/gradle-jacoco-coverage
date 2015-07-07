@@ -50,7 +50,7 @@ public class JacocoCoveragePlugin implements Plugin<Project> {
                     File xmlReportFile = report.reports.xml.getDestination()
                     if (xmlReportFile.canRead()) {
                         def xmlReport = JacocoCoverageTask.parseReport(xmlReportFile.newInputStream())
-                        checkCoverage.setCoverage(JacocoCoverageTask.extractCoverage(xmlReport))
+                        checkCoverage.setCoverage(checkCoverage.extractCoverage(xmlReport))
                     } else {
                         project.logger.info("Skipping ${JacocoCoveragePlugin.simpleName} since no Jacoco coverage " +
                             "report was found in: ${xmlReportFile}")
