@@ -57,7 +57,7 @@ class JacocoCoveragePluginTest extends IntegrationSpec {
         buildFile << standardBuildFile
         buildFile << '''
             jacocoCoverage {
-                _file 1.0
+                fileThreshold 1.0
             }
         '''.stripIndent()
 
@@ -73,7 +73,7 @@ class JacocoCoveragePluginTest extends IntegrationSpec {
         buildFile << standardBuildFile
         buildFile << '''
             jacocoCoverage {
-                _file 0.0
+                fileThreshold 0.0
             }
         '''.stripIndent()
 
@@ -88,16 +88,16 @@ class JacocoCoveragePluginTest extends IntegrationSpec {
         buildFile << standardBuildFile
         buildFile << '''
             jacocoCoverage {
-                _file 0.0
-                _file 0.0, BRANCH
-                _file 0.0, "HelloWorld.java"
-                _file 0.0, ~"HelloWorld\\\\.*"
-                _file 0.0, LINE, "HelloWorld.java"
-                _file 0.0, COMPLEXITY, ~"HelloWorld\\\\..*"
+                fileThreshold 0.0
+                fileThreshold 0.0, BRANCH
+                fileThreshold 0.0, "HelloWorld.java"
+                fileThreshold 0.0, ~"HelloWorld\\\\.*"
+                fileThreshold 0.0, LINE, "HelloWorld.java"
+                fileThreshold 0.0, COMPLEXITY, ~"HelloWorld\\\\..*"
 
-                _class 0.0, LINE, "nebula/hello/HelloWorld"
-                _package 0.0, LINE, "nebula/hello"
-                _report 0.0, LINE, "All-syntax-variations-work"
+                classThreshold 0.0, LINE, "nebula/hello/HelloWorld"
+                packageThreshold 0.0, LINE, "nebula/hello"
+                reportThreshold 0.0, LINE, "All-syntax-variations-work"
             }
         '''.stripIndent()
 
@@ -112,10 +112,10 @@ class JacocoCoveragePluginTest extends IntegrationSpec {
         buildFile << standardBuildFile
         buildFile << '''
             jacocoCoverage {
-                _file 1.0, LINE, "HelloWorld.java"
-                _class 1.0, LINE, "nebula/hello/HelloWorld"
-                _package 1.0, LINE, "nebula/hello"
-                _report 1.0, LINE, "Violations-are-reported-for-every-realm"
+                fileThreshold 1.0, LINE, "HelloWorld.java"
+                classThreshold 1.0, LINE, "nebula/hello/HelloWorld"
+                packageThreshold 1.0, LINE, "nebula/hello"
+                reportThreshold 1.0, LINE, "Violations-are-reported-for-every-realm"
             }
         '''.stripIndent()
 

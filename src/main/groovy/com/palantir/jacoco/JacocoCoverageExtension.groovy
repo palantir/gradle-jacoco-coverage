@@ -22,8 +22,8 @@ import com.google.common.collect.Multimap
 import java.util.regex.Pattern
 
 /**
- * Provides configuration options for the {@link JacocoCoveragePlugin}, in particular the _file, _class, _package,
- * _report keywords for specifying coverage requirements.
+ * Provides configuration options for the {@link JacocoCoveragePlugin}, in particular the fileThreshold, classThreshold,
+ * packageThreshold, reportThreshold keywords for specifying coverage requirements.
  */
 public class JacocoCoverageExtension {
 
@@ -42,7 +42,7 @@ public class JacocoCoverageExtension {
         mc.initialize()
         this.metaClass = mc
 
-        // For each realm, add configuration specifiers (_file, _class, etc) to the extension.
+        // For each realm, add configuration specifiers (fileThreshold, classThreshold, etc) to the extension.
         CoverageRealm.values().each { realm ->
             mc."${realm.realmName}" = { double value ->
                 threshold(realm, value)

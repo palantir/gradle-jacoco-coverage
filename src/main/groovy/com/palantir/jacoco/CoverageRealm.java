@@ -17,10 +17,10 @@
 package com.palantir.jacoco;
 
 public enum CoverageRealm {
-    FILE("sourcefile", "_file"),
-    CLASS("class", "_class"),
-    PACKAGE("package", "_package"),
-    REPORT("report", "_report");
+    FILE("sourcefile", "fileThreshold"),
+    CLASS("class", "classThreshold"),
+    PACKAGE("package", "packageThreshold"),
+    REPORT("report", "reportThreshold");
 
     /** The name of the XML tag (in the Jacoco coverage XML report ) for this realm. */
     public final String tagName;

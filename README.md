@@ -27,10 +27,10 @@ Add the following configuration to `build.gradle`:
     apply plugin: 'jacoco-coverage'
     jacocoCoverage {
         // Enfore minimum code coverage of 50% for every Java file
-        _file 0.5
+        fileThreshold 0.5
 
         // Whitelist files named MyClass.java from coverage requirements.
-        _file 0.0, "MyClass.java"
+        fileThreshold 0.0, "MyClass.java"
     }
 
 Subsequent `./gradlew build` runs will fail if the configured minimum coverage thresholds are not achieved by the
@@ -41,9 +41,9 @@ project's tests. (Note that `build` depends on `check` which depends on the `jac
 
 Code coverage requirements are specified separately for the different "realms" reported by Jacoco:
 - average coverage in a report, specified by the `-report` keyword
-- average coverage in a package, specified by the `_package` keyword
-- coverage in a class, specified by the `_class` keyword
-- coverage in a file, specified by the `_file` keyword
+- average coverage in a package, specified by the `packageThreshold` keyword
+- coverage in a class, specified by the `classThreshold` keyword
+- coverage in a file, specified by the `fileThreshold` keyword
 
 Each realm contains a number of so-called "scopes": 
 - The file realm contains one scope for every source file, named by file name, e.g., "MyClass.java". Note that file
@@ -71,7 +71,7 @@ types of coverage, e.g., lines covered or branches covered. The following syntax
     <realm> <threshold>, <coverage type>, <scope pattern>
 
 , where:
-- `<realm>` is one of `_file`, `_class`, `_package`, `_report`
+- `<realm>` is one of `fileThreshold`, `classThreshold`, `packageThreshold`, `reportThreshold`
 - `<threshold>` is a Groovy `double`
 - `<coverage type>` is one of `BRANCH`, `CLASS`, `COMPLEXITY`, `INSTRUCTION`, `LINE`, `METHOD`
 - `<scope name>` is a Groovy string
@@ -81,31 +81,31 @@ Examples:
 
     jacocoCoverage {
         // Minimum code coverage of 50% for all scopes in the file realm (i.e., for all files) and for all coverage types.
-        _file 0.5
+        fileThreshold 0.5
 
         // Minimum 'branch' coverage of 30% for all files.
-        _file 0.3, BRANCH
+        fileThreshold 0.3, BRANCH
 
         // Minimum 'line' coverage of 10% for files (in any directory) whose name matches the given regular expression.
-        _file 0.1, LINE, ~"(Indentation|Wrapping)\\.java"
+        fileThreshold 0.1, LINE, ~"(Indentation|Wrapping)\\.java"
 
         // Minimum 'line' coverage of 10% for files named "Indentation.java" (case-sensitive, in any directory).
         // (Note: This syntax uses exact string match against the file name while the regex syntax requires escaping.)
-        _file 0.1, LINE, "Indentation.java"
+        fileThreshold 0.1, LINE, "Indentation.java"
 
         // Minimum coverage of 30% in the given class.
-        _class 0.3, "org/company/module/MyClass"
+        classThreshold 0.3, "org/company/module/MyClass"
 
         // Minimum average coverage of 30% in given package.
-        _package 0.3, "org/company/module"
+        packageThreshold 0.3, "org/company/module"
 
         // Minimum average coverage of 50% in report "my-project; the report name is usually the Gradle project name.
-        _report 0.5, "my-project" 
+        reportThreshold 0.5, "my-project" 
 
         // Scopes can be exempt from all coverage requirements by exact scope name or scope name pattern.
-        _file 0.0, "MyClass.java"
-        _package 0.0, "org/company/module"
-        _file 0.0, ~".*Test.java"
+        fileThreshold 0.0, "MyClass.java"
+        packageThreshold 0.0, "org/company/module"
+        fileThreshold 0.0, ~".*Test.java"
     }
 
 #### Configuration semantics
@@ -115,8 +115,8 @@ Given the observed code coverage for a realm, scope, and coverage type (e.g., _l
 example, the specification
 
     jacocoCoverage {
-        _class 0.5, BRANCH
-        _class 0.3, "org/company/module/MyClass"
+        classThreshold 0.5, BRANCH
+        classThreshold 0.3, "org/company/module/MyClass"
     }
 
 will enforce 50% branch coverage for every class, and 30% coverage for class `org/company/module/MyClass` for all
@@ -125,9 +125,9 @@ than 50% since the lowest specified threshold dominates. This implies that speci
 excluded from any thresholds globally, for example:
 
     jacocoCoverage {
-        _package 0.0, BRANCH // Never enforce branch coverage at the package level
-        _file 0.0, ~".*Util\\.java" // Never enforce coverage on Java files like XyzUtil.java
-        _package 0.0, ~"org/thirdparty/.*" // Never enforce coverage on thirdparty package.
+        packageThreshold 0.0, BRANCH // Never enforce branch coverage at the package level
+        fileThreshold 0.0, ~".*Util\\.java" // Never enforce coverage on Java files like XyzUtil.java
+        packageThreshold 0.0, ~"org/thirdparty/.*" // Never enforce coverage on thirdparty package.
     }
 
 
