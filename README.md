@@ -26,7 +26,7 @@ Add the following configuration to `build.gradle`:
     apply plugin: 'java'
     apply plugin: 'jacoco-coverage'
     jacocoCoverage {
-        // Enfore minimum code coverage of 50% for every Java file
+        // Enforce minimum code coverage of 50% for every Java file.
         fileThreshold 0.5
 
         // Whitelist files named MyClass.java from coverage requirements.
