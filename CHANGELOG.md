@@ -1,5 +1,9 @@
 # Changelog for Gradle Jacoco Coverage Plugin
 
+# 0.2.1
+- Automatic Bintray publishing
+- No code changes
+
 ## 0.2.0
 - Introduction of coverage "realms" (file, class, package, scope) in lieu of purely regex-based threshold definitions
 - New threshold specification syntax based on realms: 'fileThreshold 0.5' or 'packageThreshold 0.5' instead of
