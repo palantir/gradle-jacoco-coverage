@@ -4,14 +4,18 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.palantir:gradle-flexversion:0.4.0'
+        classpath 'com.palantir:gradle-flexversion:0.7.0'
     }
+}
+
+plugins {
+    id 'com.jfrog.bintray' version '1.2'
 }
 
 apply plugin: 'groovy'
 apply plugin: 'idea'
-apply plugin: 'maven-publish'
 apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 repositories {
     jcenter()
@@ -43,32 +47,34 @@ task sourceJar(type: Jar) {
 }
 
 publishing {
-  publications {
-    ivy(MavenPublication) {
-      from components.java
+    publications {
+        PluginPublication(MavenPublication) {
+            from components.java
 
-      artifact(sourceJar) {
-        classifier 'sources'
-      }
+            artifact(sourceJar) {
+                classifier 'sources'
+            }
+        }
     }
-  }
-  repositories {
-    maven {
-      url "$buildDir/localpublish/"
+}
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    pkg {
+        repo = 'releases'
+        name = 'gradle-jacoco-coverage'
+        userOrg = 'palantir'
+        licenses = ['Apache-2.0']
+        publications = ['PluginPublication']
+
     }
-  }
 }
 
-task zipPublish (type: Zip) {
-  from ("${buildDir}/localpublish") {
-    include '**/*'
-    exclude '**/maven-metadata.xml*'
-  }
-  appendix = 'release'
-  destinationDir = file("${project.buildDir}/artifacts")
+bintrayUpload.onlyIf {
+    project.version.isTag == true
 }
 
-publish << {
-  file("${project.buildDir}/artifacts").mkdirs()
-  tasks.zipPublish.execute()
-}
+bintrayUpload.dependsOn { generatePomFileForPluginPublicationPublication }
+bintrayUpload.dependsOn { sourceJar }
+bintrayUpload.dependsOn { build }
