@@ -1,5 +1,9 @@
 # Changelog for Gradle Jacoco Coverage Plugin
 
+# 0.3.0
+- Prefix plugin names with 'com.palantir.' to allow Gradle Plugin Portal publication: com.palantir.jacoco-coverage and
+  com.palantir.jacoco-full-report
+
 # 0.2.1
 - Automatic Bintray publishing
 - No code changes

@@ -129,7 +129,7 @@ class JacocoFullReportPluginTest extends IntegrationSpec {
 
     def 'jacoco-full-report can exclude sub projects'() {
         when:
-        buildFile << 'apply plugin: "jacoco-full-report"'
+        buildFile << 'apply plugin: "com.palantir.jacoco-full-report"'
         buildFile << standardBuildFile
         buildFile << '''
         jacocoFull {
@@ -144,7 +144,7 @@ class JacocoFullReportPluginTest extends IntegrationSpec {
 
     def 'jacoco-full-report reports on union of execution data'() {
         when:
-        buildFile << 'apply plugin: "jacoco-full-report"'
+        buildFile << 'apply plugin: "com.palantir.jacoco-full-report"'
         buildFile << standardBuildFile
         setupSubprojectsAb()
 
@@ -156,7 +156,7 @@ class JacocoFullReportPluginTest extends IntegrationSpec {
 
     def 'jacoco-full-report works when only some subprojects provide execution data'() {
         when:
-        buildFile << 'apply plugin: "jacoco-full-report"'
+        buildFile << 'apply plugin: "com.palantir.jacoco-full-report"'
         buildFile << standardBuildFile
 
         setupSubprojectA()
@@ -171,7 +171,7 @@ class JacocoFullReportPluginTest extends IntegrationSpec {
 
     def 'jacocoFullReport object has non-null sourceDirectories even when task did not run'() {
         when:
-        buildFile << 'apply plugin: "jacoco-full-report"'
+        buildFile << 'apply plugin: "com.palantir.jacoco-full-report"'
         buildFile << standardBuildFile
         buildFile << '''
             // Java source directories are unknown before sub project is evaluated.

@@ -1,17 +1,17 @@
 # Jacoco Coverage Gradle Plugin
 
 Jacoco Coverage is a Gradle Plugin that provides two tasks extending the standard Gradle Jacoco plugin:
-- Firstly, the `jacoco-coverage` plugin allows Gradle build scripts to configure minimum Java Code Coverage thresholds
-for projects, packages, classes, and files.
-- Secondly, the `jacoco-full-report` plugin adds a task that produces a Jacoco report for the combined code coverage of
-the tests of all subprojects of the current project.
+- Firstly, the `com.palantir.jacoco-coverage` plugin allows Gradle build scripts to configure minimum Java Code Coverage
+thresholds for projects, packages, classes, and files.
+- Secondly, the `com.palantir.jacoco-full-report` plugin adds a task that produces a Jacoco report for the combined code
+coverage of the tests of all subprojects of the current project.
 
 Release and change logs: [CHANGELOG.md](CHANGELOG.md)
 
 Source code: [https://github.com/palantir/gradle-jacoco-coverage](https://github.com/palantir/gradle-jacoco-coverage)
 
 
-## jacoco-coverage
+## com.palantir.jacoco-coverage
 
 ### Quick start
 
@@ -24,7 +24,7 @@ Add the following configuration to `build.gradle`:
     }
 
     apply plugin: 'java'
-    apply plugin: 'jacoco-coverage'
+    apply plugin: 'com.palantir.jacoco-coverage'
     jacocoCoverage {
         // Enforce minimum code coverage of 50% for every Java file.
         fileThreshold 0.5
@@ -132,7 +132,7 @@ excluded from any thresholds globally, for example:
 
 
 
-## jacoco-full-report
+## com.palantir.jacoco-full-report
 
 ### Quickstart
 
@@ -144,7 +144,7 @@ Add the following configuration to the `build.gradle` configuration of the root 
         }
     }
 
-    apply plugin: 'jacoco-full-report'  // Automatically applies the 'jacoco' plugin to this project.
+    apply plugin: 'com.palantir.jacoco-full-report'  // Automatically applies the 'jacoco' plugin to this project.
 
 Subsequent `./gradle test jacocoFullReport` runs will generate a test report in `build/reports/jacoco/jacocoFullReport/`
 that evaluates the coverage yielded by all subprojects combined. (Note that generally Jacoco reports are only generated
@@ -162,5 +162,5 @@ can be excluded from consideration through the `jacocoFull` extension:
         excludeProject ":my-sub-project", ":buildSrc"
     }
 
-Note that `jacoco-full-report` and `jacoco-coverage` can be combined in order to enforce coverage requirements over the
+Note that `com.palantir.jacoco-full-report` and `com.palantir.jacoco-coverage` can be combined in order to enforce coverage requirements over the
 combined coverage of several subprojects.

@@ -23,7 +23,7 @@ class JacocoCoveragePluginTest extends IntegrationSpec {
 
     def standardBuildFile = '''
         apply plugin: 'java'
-        apply plugin: 'jacoco-coverage'
+        apply plugin: 'com.palantir.jacoco-coverage'
 
         repositories {
             jcenter()
