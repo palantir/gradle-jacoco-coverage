@@ -15,3 +15,6 @@ out/
 *.iml
 *.ipr
 *.iws
+
+# Travis CI populates gradle.properties with passwords; need to Git ignore it.
+gradle.properties
