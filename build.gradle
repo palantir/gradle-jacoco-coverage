@@ -10,6 +10,7 @@ buildscript {
 
 plugins {
     id 'com.jfrog.bintray' version '1.2'
+    id 'com.gradle.plugin-publish' version '0.9.1'
 }
 
 apply plugin: 'groovy'
@@ -24,7 +25,7 @@ repositories {
 apply plugin: 'gradle-flexversion'
 flexversion.useTags = true
 group 'com.palantir'
-version flexVersion()
+version '0.0.0-dirty-1' // flexVersion()
 
 dependencies {
     compile gradleApi()
@@ -78,3 +79,26 @@ bintrayUpload.onlyIf {
 bintrayUpload.dependsOn { generatePomFileForPluginPublicationPublication }
 bintrayUpload.dependsOn { sourceJar }
 bintrayUpload.dependsOn { build }
+
+pluginBundle {
+      website = 'https://github.com/palantir/gradle-jacoco-coverage'
+      vcsUrl = 'https://github.com/palantir/gradle-jacoco-coverage'
+      tags = ['java', 'code quality', 'jacoco', 'code coverage', 'coverage']
+
+      plugins {
+            jacocoCoveragePlugin {
+                  id = 'com.palantir.jacoco-coverage'
+                  displayName = 'Jacoco Coverage Plugin'
+                  description = 'The com.palantir.jacoco-coverage plugin allows Gradle build scripts to configure minimum Java Code Coverage thresholds for projects, packages, classes, and files.'
+            }
+            jacocoFullReportPlugin {
+                  id = 'com.palantir.jacoco-full-report'
+                  displayName = 'Jacoco Full Report Plugin'
+                  description = 'The com.palantir.jacoco-full-report plugin adds a task that produces a Jacoco report for the combined code coverage of the tests of all subprojects of the current project. '
+            }
+      }
+}
+
+publishPlugins.onlyIf {
+    project.version.isTag == true
+}
