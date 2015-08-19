@@ -40,7 +40,7 @@ project's tests. (Note that `build` depends on `check` which depends on the `jac
 ### Configuration
 
 Code coverage requirements are specified separately for the different "realms" reported by Jacoco:
-- average coverage in a report, specified by the `-report` keyword
+- average coverage in a report, specified by the `reportThreshold` keyword
 - average coverage in a package, specified by the `packageThreshold` keyword
 - coverage in a class, specified by the `classThreshold` keyword
 - coverage in a file, specified by the `fileThreshold` keyword
