@@ -30,6 +30,7 @@ version flexVersion()
 dependencies {
     compile gradleApi()
     compile localGroovy()
+    compile 'com.google.guava:guava:18.0'
 
     testCompile 'org.hamcrest:hamcrest-all:1.3'
     testCompile 'com.netflix.nebula:nebula-test:2.2.1'
