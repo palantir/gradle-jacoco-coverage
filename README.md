@@ -18,6 +18,9 @@ Source code: [https://github.com/palantir/gradle-jacoco-coverage](https://github
 Add the following configuration to `build.gradle`:
 
     buildscript {
+        repositories {
+            jcenter()
+        }
         dependencies {
             classpath 'com.palantir:jacoco-coverage:<version>'
         }
@@ -139,6 +142,9 @@ excluded from any thresholds globally, for example:
 Add the following configuration to the `build.gradle` configuration of the root project:
 
     buildscript {
+        repositories {
+            jcenter()
+        }
         dependencies {
             classpath 'com.palantir:jacoco-coverage:<version>'
         }
@@ -162,5 +168,5 @@ can be excluded from consideration through the `jacocoFull` extension:
         excludeProject ":my-sub-project", ":buildSrc"
     }
 
-Note that `com.palantir.jacoco-full-report` and `com.palantir.jacoco-coverage` can be combined in order to enforce coverage requirements over the
-combined coverage of several subprojects.
+Note that `com.palantir.jacoco-full-report` and `com.palantir.jacoco-coverage` can be combined in order to enforce
+coverage requirements over the combined coverage of several subprojects.
