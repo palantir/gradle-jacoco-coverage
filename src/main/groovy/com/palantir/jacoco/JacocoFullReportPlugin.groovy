@@ -65,7 +65,7 @@ public class JacocoFullReportPlugin implements Plugin<Project> {
                 project.logger.info("Setting up jacocoFullReport for: " + getReportTasks(project, fullReportTask))
             }
 
-            // Filter for nulls since some JacacoReport tasks may have no classDirectories or sourceDirectories
+            // Filter for nulls since some JacocoReport tasks may have no classDirectories or sourceDirectories
             // configured, for example if there are no tests for a subproject.
             executionData project.files({ getReportTasks(project, fullReportTask).executionData })
             classDirectories = project.files({
