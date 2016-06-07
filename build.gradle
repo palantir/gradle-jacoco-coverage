@@ -9,7 +9,7 @@ buildscript {
 }
 
 plugins {
-    id 'com.jfrog.bintray' version '1.2'
+    id 'com.jfrog.bintray' version '1.6'
     id 'com.gradle.plugin-publish' version '0.9.1'
 }
 
@@ -63,6 +63,7 @@ publishing {
 bintray {
     user = System.getenv('BINTRAY_USER')
     key = System.getenv('BINTRAY_KEY')
+    publish = true
     pkg {
         repo = 'releases'
         name = 'gradle-jacoco-coverage'
