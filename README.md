@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/palantir/gradle-jacoco-coverage.svg?branch=develop)](https://travis-ci.org/palantir/gradle-jacoco-coverage)
+[![Download](https://api.bintray.com/packages/palantir/releases/gradle-jacoco-coverage/images/download.svg) ](https://bintray.com/palantir/releases/gradle-jacoco-coverage/_latestVersion)
+
 # Jacoco Coverage Gradle Plugin
 
 Jacoco Coverage is a Gradle Plugin that provides two tasks extending the standard Gradle Jacoco plugin:
