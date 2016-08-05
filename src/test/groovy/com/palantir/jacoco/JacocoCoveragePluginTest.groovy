@@ -121,9 +121,14 @@ class JacocoCoveragePluginTest extends IntegrationSpec {
 
         then:
         def result = runTasksWithFailure('test', 'checkCoverage')
-        assert result.standardOutput.contains('Violations-are-reported-for-every-realm (0/3 LINE coverage < 1.00000)')
-        assert result.standardOutput.contains('HelloWorld.java (0/3 LINE coverage < 1.00000)')
-        assert result.standardOutput.contains('nebula/hello (0/3 LINE coverage < 1.00000)')
-        assert result.standardOutput.contains('nebula/hello/HelloWorld (0/3 LINE coverage < 1.00000)')
+
+        def fileViolation    = new CoverageViolation('HelloWorld.java', 0, 1.0, 3, CoverageType.LINE)
+        def classViolation   = new CoverageViolation('nebula/hello/HelloWorld', 0, 1.0, 3, CoverageType.LINE)
+        def packageViolation = new CoverageViolation('nebula/hello', 0, 1.0, 3, CoverageType.LINE)
+        def reportViolation  = new CoverageViolation('Violations-are-reported-for-every-realm', 0, 1.0, 3, CoverageType.LINE)
+        [fileViolation,
+        classViolation,
+        packageViolation,
+        reportViolation].every{result.standardOutput.contains(it.toString())}
     }
 }
