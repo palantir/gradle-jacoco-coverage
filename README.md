@@ -163,7 +163,7 @@ buildscript {
 apply plugin: 'com.palantir.jacoco-full-report'  // Automatically applies the 'jacoco' plugin to this project.
 ```
 
-Subsequent `./gradle test jacocoFullReport` runs will generate a test report in `build/reports/jacoco/jacocoFullReport/`
+Subsequent `./gradlew test jacocoFullReport` runs will generate a test report in `build/reports/jacoco/jacocoFullReport/`
 that evaluates the coverage yielded by all subprojects combined. (Note that generally Jacoco reports are only generated
 if the `test` task has run previously in order to generated the Jacoco execution data.)
 
