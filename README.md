@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/palantir/gradle-jacoco-coverage.svg?branch=develop)](https://travis-ci.org/palantir/gradle-jacoco-coverage)
 [![Download](https://api.bintray.com/packages/palantir/releases/gradle-jacoco-coverage/images/download.svg) ](https://bintray.com/palantir/releases/gradle-jacoco-coverage/_latestVersion)
 
-**Note: This plugin is considered obsolete as of Gradle 3.4 which supports [https://docs.gradle.org/release-candidate/release-notes.html#task-for-enforcing-jacoco-code-coverage-metrics](coverage enforcement as part of the core JaCoCo plugin).**
+**Note: This plugin is considered obsolete as of Gradle 3.4 which supports [coverage enforcement as part of the core JaCoCo plugin](https://docs.gradle.org/3.4/release-notes.html).**
 
 # Jacoco Coverage Gradle Plugin
 
